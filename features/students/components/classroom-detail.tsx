@@ -25,6 +25,7 @@ import { StudentRow } from "../types";
 import { useClassroomTests } from "@/features/tests/hooks/use-classroom-tests";
 import { TestList } from "@/features/tests/components/test-list";
 import { CreateTestModal } from "@/features/tests/components/create-test-modal";
+import { MarksEntryModal } from "@/features/tests/components/marks-entry-modal";
 import { TestEntryItem } from "@/features/tests/types";
 
 interface ClassroomDetailProps {
@@ -39,13 +40,9 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
   const [isCreateTestOpen, setIsCreateTestOpen] = useState(false);
+  const [selectedTestForMarks, setSelectedTestForMarks] = useState<TestEntryItem | null>(null);
   const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<StudentRow | null>(null);
-
-  const handleEnterMarks = (test: TestEntryItem) => {
-    // Stub for Step 4.2 - Marks Entry Form / Sheet
-    alert(`Step 4.2: Enter marks for test "${test.subject}"`);
-  };
 
   if (isLoading) {
     return (
@@ -203,7 +200,7 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
                 tests={tests}
                 totalStudentsCount={classroom.students.length}
                 onCreateTest={() => setIsCreateTestOpen(true)}
-                onEnterMarks={handleEnterMarks}
+                onEnterMarks={(test) => setSelectedTestForMarks(test)}
               />
             )}
           </div>
@@ -226,6 +223,13 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
           classroomId={classroomId}
           open={isCreateTestOpen}
           onOpenChange={setIsCreateTestOpen}
+        />
+
+        <MarksEntryModal
+          test={selectedTestForMarks}
+          classroomId={classroomId}
+          open={Boolean(selectedTestForMarks)}
+          onOpenChange={(open) => !open && setSelectedTestForMarks(null)}
         />
 
         <EditStudentModal
