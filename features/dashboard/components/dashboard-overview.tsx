@@ -1,18 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { User } from "next-auth";
-import { GraduationCap, LogOut, Users, BookOpen, FileCheck2, School } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { GraduationCap, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ClassroomGrid } from "@/features/classrooms/components/classroom-grid";
 
 interface DashboardOverviewProps {
   user: User;
 }
 
 export function DashboardOverview({ user }: DashboardOverviewProps) {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   const handleSignOut = () => {
     signOut({ callbackUrl: "/login" });
+  };
+
+  const handleOpenAddModal = () => {
+    setIsAddModalOpen(true);
   };
 
   return (
@@ -47,59 +54,24 @@ export function DashboardOverview({ user }: DashboardOverviewProps) {
 
       {/* Main Content Body */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-        {/* Welcome Banner */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Top Title Bar with Add Classroom Button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              Welcome back, {user.name || "Teacher"}! 👋
+              Classroom Roster
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Manage your classrooms, student roster, test marks, and automated WhatsApp report cards.
+              Overview of all your active class sections, enrolled students, and test marks.
             </p>
           </div>
+          <Button onClick={handleOpenAddModal} className="gap-2 shrink-0">
+            <Plus className="size-4" />
+            <span>Add Classroom</span>
+          </Button>
         </div>
 
-        {/* Quick Overview Metric Cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Classrooms</CardTitle>
-              <School className="size-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">--</div>
-              <CardDescription className="mt-1 text-xs">
-                Active assigned sections
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <Users className="size-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">--</div>
-              <CardDescription className="mt-1 text-xs">
-                Enrolled across all classes
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tests Evaluated</CardTitle>
-              <FileCheck2 className="size-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">--</div>
-              <CardDescription className="mt-1 text-xs">
-                Completed test entries
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Classroom Grid View */}
+        <ClassroomGrid onOpenAddModal={handleOpenAddModal} />
       </main>
     </div>
   );
