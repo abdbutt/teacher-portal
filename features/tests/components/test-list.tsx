@@ -1,6 +1,6 @@
 "use client";
 
-import { FileSpreadsheet, Users, Plus } from "lucide-react";
+import { FileSpreadsheet, Users, Plus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PortalCard } from "@/components/ui/portal-card";
@@ -11,6 +11,7 @@ interface TestListProps {
   totalStudentsCount: number;
   onCreateTest: () => void;
   onEnterMarks: (test: TestEntryItem) => void;
+  onDispatchReports?: (test: TestEntryItem) => void;
 }
 
 export function TestList({
@@ -18,6 +19,7 @@ export function TestList({
   totalStudentsCount,
   onCreateTest,
   onEnterMarks,
+  onDispatchReports,
 }: TestListProps) {
   if (tests.length === 0) {
     return (
@@ -59,12 +61,25 @@ export function TestList({
           </Badge>
         );
 
+        const dispatchAction = recordedCount > 0 && onDispatchReports ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDispatchReports(test)}
+            className="h-8 gap-1.5 text-xs text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800 transition-colors"
+          >
+            <Send className="size-3.5 text-emerald-600" />
+            <span>Dispatch</span>
+          </Button>
+        ) : undefined;
+
         return (
           <PortalCard
             key={test.id}
             title={test.subject}
             subtitle={`${test.totalMarks} Total Marks • ${new Date(test.date).toLocaleDateString()}`}
             icon={<FileSpreadsheet className="size-5" />}
+            actionsMenu={dispatchAction}
             stats={[
               {
                 icon: <Users className="size-4 text-muted-foreground" />,

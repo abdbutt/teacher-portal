@@ -64,3 +64,18 @@ export async function saveTestResults(
 
   return res.json();
 }
+
+export async function dispatchTestReportCards(
+  testId: string
+): Promise<{ success: boolean; message: string; dispatchedCount: number; totalCount: number }> {
+  const res = await fetch(`/api/tests/${testId}/dispatch`, {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to dispatch WhatsApp report cards");
+  }
+
+  return res.json();
+}

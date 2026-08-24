@@ -26,6 +26,7 @@ import { useClassroomTests } from "@/features/tests/hooks/use-classroom-tests";
 import { TestList } from "@/features/tests/components/test-list";
 import { CreateTestModal } from "@/features/tests/components/create-test-modal";
 import { MarksEntryModal } from "@/features/tests/components/marks-entry-modal";
+import { DispatchReportsDialog } from "@/features/tests/components/dispatch-reports-dialog";
 import { TestEntryItem } from "@/features/tests/types";
 
 interface ClassroomDetailProps {
@@ -41,6 +42,7 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
   const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
   const [isCreateTestOpen, setIsCreateTestOpen] = useState(false);
   const [selectedTestForMarks, setSelectedTestForMarks] = useState<TestEntryItem | null>(null);
+  const [selectedTestForDispatch, setSelectedTestForDispatch] = useState<TestEntryItem | null>(null);
   const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<StudentRow | null>(null);
 
@@ -201,6 +203,7 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
                 totalStudentsCount={classroom.students.length}
                 onCreateTest={() => setIsCreateTestOpen(true)}
                 onEnterMarks={(test) => setSelectedTestForMarks(test)}
+                onDispatchReports={(test) => setSelectedTestForDispatch(test)}
               />
             )}
           </div>
@@ -230,6 +233,13 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
           classroomId={classroomId}
           open={Boolean(selectedTestForMarks)}
           onOpenChange={(open) => !open && setSelectedTestForMarks(null)}
+        />
+
+        <DispatchReportsDialog
+          test={selectedTestForDispatch}
+          classroomId={classroomId}
+          open={Boolean(selectedTestForDispatch)}
+          onOpenChange={(open) => !open && setSelectedTestForDispatch(null)}
         />
 
         <EditStudentModal
