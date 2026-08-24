@@ -1,0 +1,67 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Teacher {
+  id         String      @id @default(cuid())
+  name       String
+  email      String      @unique
+  password   String
+  classrooms Classroom[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Classroom {
+  id          String      @id @default(cuid())
+  name        String
+  teacherId   String
+  teacher     Teacher     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  students    Student[]
+  testEntries TestEntry[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Student {
+  id                   String          @id @default(cuid())
+  name                 String
+  parentWhatsappNumber String
+  classroomId          String
+  classroom            Classroom       @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  results              StudentResult[]
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+}
+
+model TestEntry {
+  id          String          @id @default(cuid())
+  subject     String
+  totalMarks  Float
+  date        DateTime
+  classroomId String
+  classroom   Classroom       @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  results     StudentResult[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model StudentResult {
+  id            String    @id @default(cuid())
+  testEntryId   String
+  testEntry     TestEntry @relation(fields: [testEntryId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  obtainedMarks Float
+  remarks       String?
+  messageStatus String    @default("PENDING") // PENDING | SENT | FAILED
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([testEntryId, studentId])
+}
