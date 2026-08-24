@@ -6,6 +6,7 @@ import { User } from "next-auth";
 import { GraduationCap, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClassroomGrid } from "@/features/classrooms/components/classroom-grid";
+import { CreateClassroomModal } from "@/features/classrooms/components/create-classroom-modal";
 
 interface DashboardOverviewProps {
   user: User;
@@ -72,6 +73,12 @@ export function DashboardOverview({ user }: DashboardOverviewProps) {
 
         {/* Classroom Grid View */}
         <ClassroomGrid onOpenAddModal={handleOpenAddModal} />
+
+        {/* Create Classroom Modal */}
+        <CreateClassroomModal
+          open={isAddModalOpen}
+          onOpenChange={setIsAddModalOpen}
+        />
       </main>
     </div>
   );

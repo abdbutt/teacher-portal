@@ -1,4 +1,4 @@
-import { ClassroomWithCount } from "../types";
+import { ClassroomWithCount, CreateClassroomInput } from "../types";
 
 export async function fetchClassrooms(): Promise<ClassroomWithCount[]> {
   const res = await fetch("/api/classrooms");
@@ -6,5 +6,24 @@ export async function fetchClassrooms(): Promise<ClassroomWithCount[]> {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || "Failed to fetch classrooms");
   }
+  return res.json();
+}
+
+export async function createClassroom(
+  input: CreateClassroomInput
+): Promise<ClassroomWithCount> {
+  const res = await fetch("/api/classrooms", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to create classroom");
+  }
+
   return res.json();
 }
