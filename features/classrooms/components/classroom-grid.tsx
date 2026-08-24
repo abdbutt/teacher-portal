@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useClassrooms } from "../hooks/use-classrooms";
 import { ClassroomCard } from "./classroom-card";
+import { EditClassroomModal } from "./edit-classroom-modal";
+import { DeleteClassroomDialog } from "./delete-classroom-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { School, Plus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ClassroomWithCount } from "../types";
 
 interface ClassroomGridProps {
   onOpenAddModal: () => void;
@@ -12,6 +16,9 @@ interface ClassroomGridProps {
 
 export function ClassroomGrid({ onOpenAddModal }: ClassroomGridProps) {
   const { data: classrooms, isLoading, isError, error } = useClassrooms();
+
+  const [editingClassroom, setEditingClassroom] = useState<ClassroomWithCount | null>(null);
+  const [deletingClassroom, setDeletingClassroom] = useState<ClassroomWithCount | null>(null);
 
   if (isLoading) {
     return (
@@ -66,10 +73,31 @@ export function ClassroomGrid({ onOpenAddModal }: ClassroomGridProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {classrooms.map((classroom) => (
-        <ClassroomCard key={classroom.id} classroom={classroom} />
-      ))}
-    </div>
+    <>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {classrooms.map((classroom) => (
+          <ClassroomCard
+            key={classroom.id}
+            classroom={classroom}
+            onEdit={(c) => setEditingClassroom(c)}
+            onDelete={(c) => setDeletingClassroom(c)}
+          />
+        ))}
+      </div>
+
+      {/* Edit Classroom Modal */}
+      <EditClassroomModal
+        classroom={editingClassroom}
+        open={Boolean(editingClassroom)}
+        onOpenChange={(open) => !open && setEditingClassroom(null)}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteClassroomDialog
+        classroom={deletingClassroom}
+        open={Boolean(deletingClassroom)}
+        onOpenChange={(open) => !open && setDeletingClassroom(null)}
+      />
+    </>
   );
 }
