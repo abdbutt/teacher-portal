@@ -30,6 +30,7 @@ model Classroom {
 
 model Student {
   id                   String          @id @default(cuid())
+  rollNumber           String?
   name                 String
   parentWhatsappNumber String
   classroomId          String

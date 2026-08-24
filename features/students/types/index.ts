@@ -1,5 +1,6 @@
 export interface StudentRow {
   id: string;
+  rollNumber?: string | null;
   name: string;
   parentWhatsappNumber: string;
   classroomId: string;
@@ -21,12 +22,14 @@ export interface ClassroomDetail {
 }
 
 export interface CreateStudentInput {
+  rollNumber?: string;
   name: string;
   parentWhatsappNumber: string;
   classroomId: string;
 }
 
 export interface UpdateStudentInput {
+  rollNumber?: string;
   name: string;
   parentWhatsappNumber: string;
 }

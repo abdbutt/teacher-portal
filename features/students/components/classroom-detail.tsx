@@ -1,11 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Users, FileSpreadsheet, Plus, FileUp, AlertCircle, School } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClassroomDetail } from "../hooks/use-classroom-detail";
 import { StudentTable } from "./student-table";
+import { AddStudentModal } from "./add-student-modal";
+import { EditStudentModal } from "./edit-student-modal";
+import { DeleteStudentDialog } from "./delete-student-dialog";
+import { StudentRow } from "../types";
 
 interface ClassroomDetailProps {
   classroomId: string;
@@ -13,6 +18,10 @@ interface ClassroomDetailProps {
 
 export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
   const { data: classroom, isLoading, isError, error } = useClassroomDetail(classroomId);
+
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null);
+  const [deletingStudent, setDeletingStudent] = useState<StudentRow | null>(null);
 
   if (isLoading) {
     return (
@@ -104,7 +113,7 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
               <FileUp className="size-4" />
               <span>Import CSV</span>
             </Button>
-            <Button className="gap-2">
+            <Button onClick={() => setIsAddStudentOpen(true)} className="gap-2">
               <Plus className="size-4" />
               <span>Add Student</span>
             </Button>
@@ -116,8 +125,33 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold tracking-tight">Enrolled Roster</h2>
           </div>
-          <StudentTable students={classroom.students} />
+          <StudentTable
+            students={classroom.students}
+            onEditStudent={(student) => setEditingStudent(student)}
+            onDeleteStudent={(student) => setDeletingStudent(student)}
+          />
         </div>
+
+        {/* Modals & Dialogs */}
+        <AddStudentModal
+          classroomId={classroomId}
+          open={isAddStudentOpen}
+          onOpenChange={setIsAddStudentOpen}
+        />
+
+        <EditStudentModal
+          student={editingStudent}
+          classroomId={classroomId}
+          open={Boolean(editingStudent)}
+          onOpenChange={(open) => !open && setEditingStudent(null)}
+        />
+
+        <DeleteStudentDialog
+          student={deletingStudent}
+          classroomId={classroomId}
+          open={Boolean(deletingStudent)}
+          onOpenChange={(open) => !open && setDeletingStudent(null)}
+        />
       </div>
     </div>
   );
