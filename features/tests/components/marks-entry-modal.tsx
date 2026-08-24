@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   FileSpreadsheet,
   Loader2,
@@ -10,6 +11,7 @@ import {
   Hash,
   Sparkles,
   AlertTriangle,
+  Printer,
 } from "lucide-react";
 import {
   Dialog,
@@ -321,28 +323,41 @@ export function MarksEntryModal({
               </div>
             )}
 
-            <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-border">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleClose(false)}
-                disabled={isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    <span>Saving Marks...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="size-4" />
-                    <span>Save Marks</span>
-                  </>
+            <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-border flex flex-col sm:flex-row justify-between">
+              <div>
+                {testId && (
+                  <Button asChild variant="outline" type="button" className="gap-1.5 text-xs">
+                    <Link href={`/dashboard/classrooms/${classroomId}/tests/${testId}/report-card`}>
+                      <Printer className="size-3.5" />
+                      <span>Print Report Cards</span>
+                    </Link>
+                  </Button>
                 )}
-              </Button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleClose(false)}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      <span>Saving Marks...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="size-4" />
+                      <span>Save Marks</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         )}
