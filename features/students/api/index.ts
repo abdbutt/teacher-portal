@@ -1,4 +1,6 @@
 import {
+  BatchStudentInput,
+  BatchStudentResponse,
   ClassroomDetail,
   CreateStudentInput,
   StudentRow,
@@ -62,4 +64,24 @@ export async function deleteStudent(id: string): Promise<void> {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || "Failed to delete student");
   }
+}
+
+export async function batchCreateStudents(
+  classroomId: string,
+  students: BatchStudentInput[]
+): Promise<BatchStudentResponse> {
+  const res = await fetch("/api/students/batch", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ classroomId, students }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to import students batch");
+  }
+
+  return res.json();
 }

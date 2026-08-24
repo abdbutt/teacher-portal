@@ -33,3 +33,25 @@ export interface UpdateStudentInput {
   name: string;
   parentWhatsappNumber: string;
 }
+
+export interface BatchStudentInput {
+  rollNumber?: string;
+  name: string;
+  parentWhatsappNumber: string;
+}
+
+export interface BatchStudentResponse {
+  count: number;
+  message: string;
+  skippedCount: number;
+  validationErrors: string[];
+}
+
+export interface CsvParsedRow {
+  rowIndex: number;
+  rollNumber?: string;
+  name: string;
+  parentWhatsappNumber: string;
+  isValid: boolean;
+  errors: string[];
+}

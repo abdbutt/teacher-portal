@@ -10,6 +10,7 @@ import { StudentTable } from "./student-table";
 import { AddStudentModal } from "./add-student-modal";
 import { EditStudentModal } from "./edit-student-modal";
 import { DeleteStudentDialog } from "./delete-student-dialog";
+import { CsvImportModal } from "./csv-import-modal";
 import { StudentRow } from "../types";
 
 interface ClassroomDetailProps {
@@ -20,6 +21,7 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
   const { data: classroom, isLoading, isError, error } = useClassroomDetail(classroomId);
 
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<StudentRow | null>(null);
 
@@ -109,7 +111,11 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
 
           {/* Roster Action Buttons */}
           <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportCsvOpen(true)}
+              className="gap-2"
+            >
               <FileUp className="size-4" />
               <span>Import CSV</span>
             </Button>
@@ -123,7 +129,7 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
         {/* Student Roster Table */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold tracking-tight">Enrolled Roster</h2>
+            <h2 className="text-lg font-semibold tracking-tight">Enrolled Students</h2>
           </div>
           <StudentTable
             students={classroom.students}
@@ -137,6 +143,12 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
           classroomId={classroomId}
           open={isAddStudentOpen}
           onOpenChange={setIsAddStudentOpen}
+        />
+
+        <CsvImportModal
+          classroomId={classroomId}
+          open={isImportCsvOpen}
+          onOpenChange={setIsImportCsvOpen}
         />
 
         <EditStudentModal
