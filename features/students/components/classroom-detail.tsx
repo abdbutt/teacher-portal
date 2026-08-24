@@ -2,7 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users, FileSpreadsheet, Plus, FileUp, AlertCircle, School } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  FileSpreadsheet,
+  Plus,
+  FileUp,
+  AlertCircle,
+  School,
+  ClipboardList,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClassroomDetail } from "../hooks/use-classroom-detail";
@@ -13,17 +22,30 @@ import { DeleteStudentDialog } from "./delete-student-dialog";
 import { CsvImportModal } from "./csv-import-modal";
 import { StudentRow } from "../types";
 
+import { useClassroomTests } from "@/features/tests/hooks/use-classroom-tests";
+import { TestList } from "@/features/tests/components/test-list";
+import { CreateTestModal } from "@/features/tests/components/create-test-modal";
+import { TestEntryItem } from "@/features/tests/types";
+
 interface ClassroomDetailProps {
   classroomId: string;
 }
 
 export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
   const { data: classroom, isLoading, isError, error } = useClassroomDetail(classroomId);
+  const { data: tests = [], isLoading: isTestsLoading } = useClassroomTests(classroomId);
 
+  const [activeTab, setActiveTab] = useState<"students" | "tests">("students");
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
   const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
+  const [isCreateTestOpen, setIsCreateTestOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<StudentRow | null>(null);
+
+  const handleEnterMarks = (test: TestEntryItem) => {
+    // Stub for Step 4.2 - Marks Entry Form / Sheet
+    alert(`Step 4.2: Enter marks for test "${test.subject}"`);
+  };
 
   if (isLoading) {
     return (
@@ -104,39 +126,88 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <FileSpreadsheet className="size-4" />
-                <span>{classroom._count.testEntries} Recorded Tests</span>
+                <span>{tests.length} Recorded Tests</span>
               </div>
             </div>
           </div>
 
-          {/* Roster Action Buttons */}
+          {/* Classroom Actions */}
           <div className="flex items-center gap-2 shrink-0">
+            {activeTab === "students" ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsImportCsvOpen(true)}
+                  className="gap-2"
+                >
+                  <FileUp className="size-4" />
+                  <span>Import CSV</span>
+                </Button>
+                <Button onClick={() => setIsAddStudentOpen(true)} className="gap-2">
+                  <Plus className="size-4" />
+                  <span>Add Student</span>
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => setIsCreateTestOpen(true)} className="gap-2">
+                <Plus className="size-4" />
+                <span>Create Test Entry</span>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Tabs Selection Bar */}
+        <div className="flex items-center justify-between border-b border-border pb-2">
+          <div className="flex items-center gap-2">
             <Button
-              variant="outline"
-              onClick={() => setIsImportCsvOpen(true)}
-              className="gap-2"
+              variant={activeTab === "students" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("students")}
+              className="gap-2 rounded-xl"
             >
-              <FileUp className="size-4" />
-              <span>Import CSV</span>
+              <Users className="size-4" />
+              <span>Enrolled Students ({classroom.students.length})</span>
             </Button>
-            <Button onClick={() => setIsAddStudentOpen(true)} className="gap-2">
-              <Plus className="size-4" />
-              <span>Add Student</span>
+
+            <Button
+              variant={activeTab === "tests" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("tests")}
+              className="gap-2 rounded-xl"
+            >
+              <ClipboardList className="size-4" />
+              <span>Test Entries ({tests.length})</span>
             </Button>
           </div>
         </div>
 
-        {/* Student Roster Table */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold tracking-tight">Enrolled Students</h2>
+        {/* Tab Contents */}
+        {activeTab === "students" ? (
+          <div className="space-y-4">
+            <StudentTable
+              students={classroom.students}
+              onEditStudent={(student) => setEditingStudent(student)}
+              onDeleteStudent={(student) => setDeletingStudent(student)}
+            />
           </div>
-          <StudentTable
-            students={classroom.students}
-            onEditStudent={(student) => setEditingStudent(student)}
-            onDeleteStudent={(student) => setDeletingStudent(student)}
-          />
-        </div>
+        ) : (
+          <div className="space-y-4">
+            {isTestsLoading ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-44 w-full rounded-2xl" />
+                <Skeleton className="h-44 w-full rounded-2xl" />
+              </div>
+            ) : (
+              <TestList
+                tests={tests}
+                totalStudentsCount={classroom.students.length}
+                onCreateTest={() => setIsCreateTestOpen(true)}
+                onEnterMarks={handleEnterMarks}
+              />
+            )}
+          </div>
+        )}
 
         {/* Modals & Dialogs */}
         <AddStudentModal
@@ -149,6 +220,12 @@ export function ClassroomDetail({ classroomId }: ClassroomDetailProps) {
           classroomId={classroomId}
           open={isImportCsvOpen}
           onOpenChange={setIsImportCsvOpen}
+        />
+
+        <CreateTestModal
+          classroomId={classroomId}
+          open={isCreateTestOpen}
+          onOpenChange={setIsCreateTestOpen}
         />
 
         <EditStudentModal
