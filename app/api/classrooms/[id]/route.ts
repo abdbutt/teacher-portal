@@ -9,6 +9,53 @@ interface RouteParams {
   }>;
 }
 
+export async function GET(req: Request, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const classroom = await prisma.classroom.findFirst({
+      where: {
+        id,
+        teacherId: session.user.id,
+      },
+      include: {
+        students: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+        _count: {
+          select: {
+            students: true,
+            testEntries: true,
+          },
+        },
+      },
+    });
+
+    if (!classroom) {
+      return NextResponse.json(
+        { error: "Classroom not found or unauthorized" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(classroom);
+  } catch (error) {
+    console.error("GET /api/classrooms/[id] error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch classroom" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(req: Request, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
