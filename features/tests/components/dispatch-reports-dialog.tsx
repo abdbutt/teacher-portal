@@ -91,6 +91,7 @@ export function DispatchReportsDialog({
 
     const batchSize = 5;
     let completed = 0;
+    const finalStatuses: Record<string, "SENT" | "FAILED"> = {};
 
     for (let i = 0; i < targets.length; i += batchSize) {
       const batch = targets.slice(i, i + batchSize);
@@ -113,11 +114,14 @@ export function DispatchReportsDialog({
           try {
             const res = await dispatchTestReportCards(testId!, [result.studentId]);
             if (res.success && res.dispatchedCount > 0) {
+              finalStatuses[result.studentId] = "SENT";
               setStatuses((prev) => ({ ...prev, [result.studentId]: "SENT" }));
             } else {
+              finalStatuses[result.studentId] = "FAILED";
               setStatuses((prev) => ({ ...prev, [result.studentId]: "FAILED" }));
             }
           } catch (e) {
+            finalStatuses[result.studentId] = "FAILED";
             setStatuses((prev) => ({ ...prev, [result.studentId]: "FAILED" }));
           } finally {
             completed++;
@@ -134,18 +138,27 @@ export function DispatchReportsDialog({
     queryClient.invalidateQueries({ queryKey: ["test-results", testId] });
     queryClient.invalidateQueries({ queryKey: ["tests", classroomId] });
 
-    // Toast result sum
-    const failedCount = targets.length - Object.keys(statuses).filter(id => statuses[id] === "SENT").length;
-    if (failedCount > 0) {
+    // Toast result sum based on accurate final statuses tracker
+    const totalCount = targets.length;
+    const actualFailedCount = Object.values(finalStatuses).filter((s) => s === "FAILED").length;
+    const actualSentCount = totalCount - actualFailedCount;
+
+    if (actualSentCount === 0 && totalCount > 0) {
       toast({
-        title: "Dispatch Completed with warnings ⚠️",
-        description: `Successfully sent report cards. However, some messages failed.`,
+        title: "Dispatch Failed ❌",
+        description: "All messages failed to send. Please check your credentials and numbers.",
+        variant: "destructive",
+      });
+    } else if (actualFailedCount > 0) {
+      toast({
+        title: "Dispatched with Warnings ⚠️",
+        description: `Successfully sent ${actualSentCount} report card(s), but ${actualFailedCount} failed. Click 'Retry Failed' to dispatch remaining.`,
         variant: "destructive",
       });
     } else {
       toast({
         title: "Reports Dispatched! 🚀",
-        description: `Successfully sent report cards to all parents via WhatsApp.`,
+        description: "Successfully sent all report cards to parents via WhatsApp.",
         variant: "success",
       });
     }
