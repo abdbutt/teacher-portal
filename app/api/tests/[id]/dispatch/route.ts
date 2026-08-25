@@ -20,6 +20,18 @@ export async function POST(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Verify WhatsApp provider credentials are configured
+    const isConfigured = 
+      !!((process.env.META_ACCESS_TOKEN && process.env.META_PHONE_NUMBER_ID) ||
+      (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER));
+
+    if (!isConfigured) {
+      return NextResponse.json(
+        { error: "WhatsApp Gateway is not configured. Please add your META_ACCESS_TOKEN or TWILIO_ACCOUNT_SID credentials in the server's .env file." },
+        { status: 400 }
+      );
+    }
+
     const { id: testId } = await params;
 
     const body = await req.json().catch(() => ({}));

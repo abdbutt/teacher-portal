@@ -16,8 +16,8 @@ export class MockWhatsAppProvider implements WhatsAppProvider {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     return {
-      success: true,
-      messageId: `mock_wa_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      success: false,
+      error: "WhatsApp API credentials are not configured. Please define META_ACCESS_TOKEN or TWILIO_ACCOUNT_SID in your .env file.",
     };
   }
 }
