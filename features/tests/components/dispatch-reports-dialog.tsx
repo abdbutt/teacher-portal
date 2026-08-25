@@ -297,17 +297,6 @@ export function DispatchReportsDialog({
                 })}
               </div>
             </div>
-            
-            {/* Branded notification notice */}
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex gap-2.5 text-xs text-primary-foreground/90">
-              <FileSpreadsheet className="size-4 shrink-0 text-primary mt-0.5" />
-              <div>
-                <p className="font-medium text-foreground">SaaS Automation Notice</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
-                  Messages are sent automatically via the central gateway number. A footer is added directing parents to reply to your contact details.
-                </p>
-              </div>
-            </div>
           </div>
         )}
 
