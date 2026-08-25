@@ -87,12 +87,79 @@ export class TwilioWhatsAppProvider implements WhatsAppProvider {
   }
 }
 
+export class MetaWhatsAppProvider implements WhatsAppProvider {
+  private accessToken: string;
+  private phoneNumberId: string;
+
+  constructor(accessToken: string, phoneNumberId: string) {
+    this.accessToken = accessToken;
+    this.phoneNumberId = phoneNumberId;
+  }
+
+  async sendMessage(payload: WhatsAppMessagePayload): Promise<WhatsAppDispatchResult> {
+    try {
+      // Meta API requires digits only with country code (no plus sign +)
+      const cleanTo = payload.to.replace(/[^0-9]/g, "");
+
+      const url = `https://graph.facebook.com/v18.0/${this.phoneNumberId}/messages`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: cleanTo,
+          type: "text",
+          text: {
+            preview_url: false,
+            body: payload.message,
+          },
+        }),
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: resData.error?.message || `HTTP error ${response.status}: ${JSON.stringify(resData)}`,
+        };
+      }
+
+      return {
+        success: true,
+        messageId: resData.messages?.[0]?.id || `meta_wa_${Date.now()}`,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "An unexpected error occurred during Meta Cloud API send",
+      };
+    }
+  }
+}
+
+const metaAccessToken = process.env.META_ACCESS_TOKEN;
+const metaPhoneNumberId = process.env.META_PHONE_NUMBER_ID;
+
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 
-// Singleton WhatsApp provider instance configuration
-export const whatsappProvider: WhatsAppProvider =
-  accountSid && authToken && fromNumber
-    ? new TwilioWhatsAppProvider(accountSid, authToken, fromNumber)
-    : new MockWhatsAppProvider();
+// Singleton WhatsApp provider selection logic
+export const whatsappProvider: WhatsAppProvider = (() => {
+  if (metaAccessToken && metaPhoneNumberId) {
+    console.log("[WHATSAPP INTERACTION] Active Provider: META Cloud API");
+    return new MetaWhatsAppProvider(metaAccessToken, metaPhoneNumberId);
+  }
+  if (accountSid && authToken && fromNumber) {
+    console.log("[WHATSAPP INTERACTION] Active Provider: Twilio API Gateway");
+    return new TwilioWhatsAppProvider(accountSid, authToken, fromNumber);
+  }
+  console.log("[WHATSAPP INTERACTION] Active Provider: MOCK Fallback (Console Logs)");
+  return new MockWhatsAppProvider();
+})();
