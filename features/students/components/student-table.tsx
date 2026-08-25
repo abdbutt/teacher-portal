@@ -55,7 +55,7 @@ export function StudentTable({
             <TableHead className="w-28">Roll No.</TableHead>
             <TableHead>Student Name</TableHead>
             <TableHead>Parent WhatsApp Number</TableHead>
-            <TableHead className="text-right">Enrolled Date</TableHead>
+            <TableHead className="hidden sm:table-cell text-right">Enrolled Date</TableHead>
             <TableHead className="w-12 text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -84,7 +84,7 @@ export function StudentTable({
                   <span>{student.parentWhatsappNumber}</span>
                 </div>
               </TableCell>
-              <TableCell className="text-right text-xs text-muted-foreground">
+              <TableCell className="hidden sm:table-cell text-right text-xs text-muted-foreground">
                 {new Date(student.createdAt).toLocaleDateString()}
               </TableCell>
               <TableCell className="text-center">

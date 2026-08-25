@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { formatReportCardMessage } from "@/lib/whatsapp/template";
-import { whatsappProvider } from "@/lib/whatsapp/provider";
+import { sendWhatsAppAPI } from "@/lib/whatsapp";
+
 
 interface RouteParams {
   params: Promise<{
@@ -19,7 +20,22 @@ export async function POST(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Verify WhatsApp provider credentials are configured
+    const isConfigured = 
+      !!((process.env.META_ACCESS_TOKEN && process.env.META_PHONE_NUMBER_ID) ||
+      (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_NUMBER));
+
+    if (!isConfigured) {
+      return NextResponse.json(
+        { error: "WhatsApp Gateway is not configured. Please add your META_ACCESS_TOKEN or TWILIO_ACCOUNT_SID credentials in the server's .env file." },
+        { status: 400 }
+      );
+    }
+
     const { id: testId } = await params;
+
+    const body = await req.json().catch(() => ({}));
+    const { studentIds } = body as { studentIds?: string[] };
 
     // Verify test entry ownership
     const testEntry = await prisma.testEntry.findFirst({
@@ -32,6 +48,9 @@ export async function POST(req: Request, { params }: RouteParams) {
       include: {
         classroom: true,
         results: {
+          where: studentIds && studentIds.length > 0 ? {
+            studentId: { in: studentIds }
+          } : undefined,
           include: {
             student: true,
           },
@@ -65,46 +84,54 @@ export async function POST(req: Request, { params }: RouteParams) {
     let successCount = 0;
     let failCount = 0;
 
-    // Dispatch messages sequentially
-    for (const result of testEntry.results) {
-      const percentage =
-        testEntry.totalMarks > 0
-          ? Math.round((result.obtainedMarks / testEntry.totalMarks) * 100 * 10) / 10
-          : 0;
+    const batchSize = 5;
+    for (let i = 0; i < testEntry.results.length; i += batchSize) {
+      const batch = testEntry.results.slice(i, i + batchSize);
+      
+      const batchPromises = batch.map(async (result) => {
+        const percentage =
+          testEntry.totalMarks > 0
+            ? Math.round((result.obtainedMarks / testEntry.totalMarks) * 100 * 10) / 10
+            : 0;
 
-      const messageContent = formatReportCardMessage({
-        schoolOrClassName: testEntry.classroom.name,
-        studentName: result.student.name,
-        rollNumber: result.student.rollNumber,
-        parentWhatsappNumber: result.student.parentWhatsappNumber,
-        subject: testEntry.subject,
-        testDate: formattedDate,
-        obtainedMarks: result.obtainedMarks,
-        totalMarks: testEntry.totalMarks,
-        percentage,
-        isPassed: percentage >= 50,
-        remarks: result.remarks,
+        const messageContent = formatReportCardMessage({
+          schoolOrClassName: testEntry.classroom.name,
+          studentName: result.student.name,
+          rollNumber: result.student.rollNumber,
+          parentWhatsappNumber: result.student.parentWhatsappNumber,
+          subject: testEntry.subject,
+          testDate: formattedDate,
+          obtainedMarks: result.obtainedMarks,
+          totalMarks: testEntry.totalMarks,
+          percentage,
+          isPassed: percentage >= 50,
+          remarks: result.remarks,
+        });
+
+        const dispatchResult = await sendWhatsAppAPI(
+          result.student.parentWhatsappNumber,
+          messageContent
+        );
+
+        if (dispatchResult.success) {
+          await prisma.studentResult.update({
+            where: { id: result.id },
+            data: { messageStatus: "SENT" },
+          });
+          return true;
+        } else {
+          await prisma.studentResult.update({
+            where: { id: result.id },
+            data: { messageStatus: "FAILED" },
+          });
+          return false;
+        }
       });
 
-      const dispatchResult = await whatsappProvider.sendMessage({
-        to: result.student.parentWhatsappNumber,
-        message: messageContent,
-        studentId: result.studentId,
-        testEntryId: testId,
-      });
-
-      if (dispatchResult.success) {
-        successCount++;
-        await prisma.studentResult.update({
-          where: { id: result.id },
-          data: { messageStatus: "SENT" },
-        });
-      } else {
-        failCount++;
-        await prisma.studentResult.update({
-          where: { id: result.id },
-          data: { messageStatus: "FAILED" },
-        });
+      const batchResults = await Promise.all(batchPromises);
+      for (const res of batchResults) {
+        if (res) successCount++;
+        else failCount++;
       }
     }
 

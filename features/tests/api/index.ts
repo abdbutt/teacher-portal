@@ -66,10 +66,15 @@ export async function saveTestResults(
 }
 
 export async function dispatchTestReportCards(
-  testId: string
+  testId: string,
+  studentIds?: string[]
 ): Promise<{ success: boolean; message: string; dispatchedCount: number; totalCount: number }> {
   const res = await fetch(`/api/tests/${testId}/dispatch`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ studentIds }),
   });
 
   if (!res.ok) {
