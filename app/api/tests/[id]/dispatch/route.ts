@@ -22,6 +22,9 @@ export async function POST(req: Request, { params }: RouteParams) {
 
     const { id: testId } = await params;
 
+    const body = await req.json().catch(() => ({}));
+    const { studentIds } = body as { studentIds?: string[] };
+
     // Verify test entry ownership
     const testEntry = await prisma.testEntry.findFirst({
       where: {
@@ -33,6 +36,9 @@ export async function POST(req: Request, { params }: RouteParams) {
       include: {
         classroom: true,
         results: {
+          where: studentIds && studentIds.length > 0 ? {
+            studentId: { in: studentIds }
+          } : undefined,
           include: {
             student: true,
           },

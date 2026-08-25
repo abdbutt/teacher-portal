@@ -9,8 +9,10 @@ export function useDispatchReports(classroomId: string, onSuccessCallback?: () =
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (testId: string) => dispatchTestReportCards(testId),
-    onSuccess: (data, testId) => {
+    mutationFn: ({ testId, studentIds }: { testId: string; studentIds?: string[] }) =>
+      dispatchTestReportCards(testId, studentIds),
+    onSuccess: (data, variables) => {
+      const { testId } = variables;
       queryClient.invalidateQueries({ queryKey: ["test-results", testId] });
       queryClient.invalidateQueries({ queryKey: ["tests", classroomId] });
       queryClient.invalidateQueries({ queryKey: ["classrooms", classroomId] });
